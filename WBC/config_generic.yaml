@@ -1,0 +1,46 @@
+# Perfect 2 node network, no noise from either computation on the nodes or communication between nodes
+stacks:
+  - name: Sender
+    qdevice_typ: generic
+    qdevice_cfg:
+      two_qubit_gate_depolar_prob: 0
+      T1: 0
+      T2: 0
+      num_qubits: 5
+  - name: Receiver0
+    qdevice_typ: generic
+    qdevice_cfg:
+      two_qubit_gate_depolar_prob: 0
+      T1: 0
+      T2: 0
+      num_qubits: 5
+  - name: Receiver1
+    qdevice_typ: generic
+    qdevice_cfg:
+      two_qubit_gate_depolar_prob: 0
+      T1: 0
+      T2: 0
+      num_qubits: 5
+
+links:
+  - stack1: Sender
+    stack2: Receiver0
+    typ: perfect
+  - stack1: Sender
+    stack2: Receiver1
+    typ: perfect
+  - stack1: Receiver0
+    stack2: Receiver1
+    typ: perfect
+
+
+clinks:
+  - stack1: Sender
+    stack2: Receiver0
+    typ: instant
+  - stack1: Sender
+    stack2: Receiver1
+    typ: instant
+  - stack1: Receiver0
+    stack2: Receiver1
+    typ: instant
