@@ -13,7 +13,6 @@ cfg = StackNetworkConfig.from_file("config_nv.yaml")
 # Create instances of programs to run
 receiver1_program = Receiver1Program()
 
-# Run the simulation. Programs argument is a mapping of network node labels to programs to run on that node
 def run_simulation(min_m, max_m, mu, l, faulty, n):
     results = []
     for m in range(min_m, max_m+1, 10):
@@ -40,7 +39,7 @@ def run_simulation_parallel(arg_list):
     # Set a unique seed for each run
     set_random_state(arg_list[0])
     
-    # Your SquidASM experiment setup here
+    #Run simulation on each core with required parameters
     result = run_simulation(*arg_list[1:])
     
     return result
@@ -66,6 +65,7 @@ if __name__ == '__main__':
     args = [[seed, min_m, max_m, mu, l, faulty, int(N/num_cores)] for seed in seeds]
     args[-1][-1] += N % num_cores
     
+    #Distribute simulation among all cores
     with mp.Pool(processes=num_cores) as pool:
         results = pool.map(run_simulation_parallel, args)
 

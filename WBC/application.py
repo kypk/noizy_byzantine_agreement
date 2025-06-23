@@ -9,8 +9,9 @@ from squidasm.util.routines import teleport_send, teleport_recv # type: ignore
 import math
 import random
 
-prob_01 = 0.0#0.05
-prob_10 = 0.0#0.005
+bitflip = False # Set to True to enable bit-flips
+prob_01 = 0.05
+prob_10 = 0.005
 
 class SenderProgram(Program):
     PEER_NAMES = ["Receiver0", "Receiver1"]
@@ -35,6 +36,7 @@ class SenderProgram(Program):
         epr_sockets: list[EPRSocket] = [context.epr_sockets[name] for name in self.PEER_NAMES]
         connection: BaseNetQASMConnection = context.connection
 
+        #Decide consensus value
         xs = random.choice([0, 1])
         if (self.faulty == "s"):
             csockets[0].send(0)
@@ -45,6 +47,7 @@ class SenderProgram(Program):
             csockets[0].send(xs)
             csockets[1].send(xs)
 
+        #Send protocol parameters to receivers
         csockets[0].send(f"{self.mu},{self.l}")
         csockets[1].send(f"{self.mu},{self.l}")
 
@@ -81,7 +84,7 @@ class SenderProgram(Program):
 
             q0.cnot(q2)
             
-
+            #Teleport qubits 2 and 3 to receivers 0 and 1 respectively
             yield from teleport_send(q2, context, "Receiver0")
             yield from teleport_send(q3, context, "Receiver1")
 
@@ -90,22 +93,23 @@ class SenderProgram(Program):
             q0_m = result[0].value
             q1_m = result[1].value
             
-            #Flip bits with specified probabilities (measurement error)
-            # if (q0_m == 0):
-            #     if (random.random() <= prob_01):
-            #         q0_m = 1
-            # else:
-            #     if (random.random() <= prob_10):
-            #         q0_m = 0
+            if (bitflip):
+                if (q0_m == 0):
+                    if (random.random() <= prob_01):
+                        q0_m = 1
+                else:
+                    if (random.random() <= prob_10):
+                        q0_m = 0
 
-            # if (q1_m == 0):
-            #     if (random.random() <= prob_01):
-            #         q1_m = 1
-            # else:
-            #     if (random.random() <= prob_10):
-            #         q1_m = 0
+                if (q1_m == 0):
+                    if (random.random() <= prob_01):
+                        q1_m = 1
+                else:
+                    if (random.random() <= prob_10):
+                        q1_m = 0
             measurements.append([q0_m, q1_m])
 
+        #Apply faulty strategy
         if (self.faulty == "s"):
             check_set_0 = []
             check_set_1 = []
@@ -150,6 +154,8 @@ class SenderProgram(Program):
             csockets[1].send(check_set_1)
             return {"ys": xs}
 
+
+        #Calculate check set
         check_set = []
         for i, values in enumerate(measurements):
             if values[0] == xs and values[1] == xs:
@@ -196,18 +202,18 @@ class Receiver0Program(Program):
             yield from connection.flush()
             q_m = result.value
 
-            #Flip bit with specified probabilities (measurement error)
-            # if (q_m == 0):
-            #     if (random.random() <= prob_01):
-            #         q_m = 1
-            # else:
-            #     if (random.random() <= prob_10):
-            #         q_m = 0
+            if (bitflip):
+                if (q_m == 0):
+                    if (random.random() <= prob_01):
+                        q_m = 1
+                else:
+                    if (random.random() <= prob_10):
+                        q_m = 0
             measurements.append(q_m)
 
         check_set = yield from csockets[0].recv()
 
-
+        #Apply faulty strategy
         y0 = x0
         T = math.ceil(mu*m)
         if (self.faulty == "r0"):
@@ -239,6 +245,7 @@ class Receiver0Program(Program):
                         k_xx0x += 1
             check_set = new_check_set
         else:
+            #Check Phase
             if (len(check_set) < T):
                 y0 = None
 
@@ -284,19 +291,19 @@ class Receiver1Program(Program):
             yield from connection.flush()
             q_m = result.value
 
-            #Flip bit with specified probabilities (measurement error)
-            # if (q_m == 0):
-            #     if (random.random() <= prob_01):
-            #         q_m = 1
-            # else:
-            #     if (random.random() <= prob_10):
-            #         q_m = 0
+            if (bitflip):
+                if (q_m == 0):
+                    if (random.random() <= prob_01):
+                        q_m = 1
+                else:
+                    if (random.random() <= prob_10):
+                        q_m = 0
             measurements.append(q_m)
 
         check_set = yield from csockets[0].recv()
 
         y1_temp = x1
-
+        #Check Phase
         T = math.ceil(mu*m)
         if (len(check_set) < T):
             y1_temp = None
@@ -309,7 +316,7 @@ class Receiver1Program(Program):
         check_set_0 = yield from csockets[1].recv()
 
         y1 = y0
-
+        #Cross-Check Phase
         if (len(check_set_0) < T or y0 is None or y1_temp is None):
             y1 = y1_temp
         else:
