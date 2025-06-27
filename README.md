@@ -1,7 +1,7 @@
 # Byzantine Agreement Protocol in a Small Quantum Network
 
 ## Description
-This repository was created for the purposes of the TU Delft Research Project (CSE3000). It contains the code used to simulate a three-node quantum-aided weak broadcast protocol under the influence of measurement errors. For more details, see the [research paper](research_paper.pdf)
+This repository was created for the purposes of the [Research Project](https://github.com/TU-Delft-CSE/Research-Project) (2025) for [TU Delft](https://github.com/TU-Delft-CSE). It contains the code used to simulate a three-node quantum-aided weak broadcast protocol under the influence of measurement errors. For more details, see the [research paper](research_paper.pdf)
 
 ## Installation
 1. Follow the [official instructions](https://squidasm.readthedocs.io/en/latest/installation.html) to install SquidASM. It is recommended to install SquidASM in a [virtual environment](https://docs.python.org/3/library/venv.html).
